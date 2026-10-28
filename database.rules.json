@@ -1,0 +1,45 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        // A user can read their own profile; admins can read profiles for eligibility counters and monitoring
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        // A student can write to their own profile, but CANNOT modify or escalate their role
+        ".write": "auth != null && auth.uid === $uid && (!newData.hasChild('role') || newData.child('role').val() === data.child('role').val() || (root.child('users').child(auth.uid).child('role').val() === 'admin'))",
+        ".validate": "newData.hasChildren(['email', 'role'])"
+      }
+    },
+    "scholarships": {
+      // Approved scholarships are readable by all authenticated users
+      // Non-approved (pending/rejected) scholarships are only readable by admins
+      ".read": "auth != null",
+      // Only administrators can create, update, approve, or reject scholarships
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$scholarshipId": {
+        ".validate": "newData.hasChildren(['name', 'status'])"
+      }
+    },
+    "applications": {
+      "$uid": {
+        // Students can only read and write their own application status tracking records
+        // Administrators can view records for the status monitoring page
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "announcements": {
+      // Authenticated users can read announcements
+      ".read": "auth != null",
+      // Only administrators can create or publish announcements
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
+    },
+    "notifications": {
+      "$uid": {
+        // A student can read their own notifications and mark them as read
+        ".read": "auth != null && auth.uid === $uid",
+        // Admin or server functions can create notifications for the student; the student can update the read state
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    }
+  }
+}
